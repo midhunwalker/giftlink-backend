@@ -1,0 +1,18 @@
+[
+  { "title": "Handmade Mug", "category": "home", "price": 15, "description": "Ceramic handmade mug", "image": "mug.jpg" },
+  { "title": "Bluetooth Speaker", "category": "electronics", "price": 40, "description": "Portable speaker", "image": "speaker.jpg" },
+  { "title": "Leather Wallet", "category": "fashion", "price": 25, "description": "Genuine leather wallet", "image": "wallet.jpg" },
+  { "title": "Fitness Band", "category": "electronics", "price": 50, "description": "Track daily activity", "image": "band.jpg" },
+  { "title": "Coffee Maker", "category": "home", "price": 80, "description": "Automatic coffee machine", "image": "coffee.jpg" },
+  { "title": "Perfume Set", "category": "fashion", "price": 60, "description": "Luxury fragrance set", "image": "perfume.jpg" },
+  { "title": "Gaming Mouse", "category": "electronics", "price": 35, "description": "High precision gaming mouse", "image": "mouse.jpg" },
+  { "title": "Notebook Planner", "category": "office", "price": 10, "description": "Daily planner notebook", "image": "planner.jpg" },
+  { "title": "LED Desk Lamp", "category": "home", "price": 22, "description": "Adjustable desk lamp", "image": "lamp.jpg" },
+  { "title": "Smart Watch", "category": "electronics", "price": 120, "description": "Smart wearable watch", "image": "watch.jpg" },
+  { "title": "Backpack", "category": "fashion", "price": 45, "description": "Travel backpack", "image": "bag.jpg" },
+  { "title": "Wireless Earbuds", "category": "electronics", "price": 75, "description": "Noise cancelling earbuds", "image": "earbuds.jpg" },
+  { "title": "Water Bottle", "category": "home", "price": 12, "description": "Stainless steel bottle", "image": "bottle.jpg" },
+  { "title": "Sunglasses", "category": "fashion", "price": 30, "description": "UV protected sunglasses", "image": "glasses.jpg" },
+  { "title": "Power Bank", "category": "electronics", "price": 28, "description": "10000mAh power bank", "image": "powerbank.jpg" },
+  { "title": "Desk Organizer", "category": "office", "price": 18, "description": "Wooden desk organizer", "image": "organizer.jpg" }
+]
