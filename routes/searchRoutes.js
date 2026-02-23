@@ -1,5 +1,4 @@
 const express = require('express');
-const { ObjectId } = require('mongodb');
 const { getDb } = require('../models/db');
 
 const router = express.Router();
@@ -7,28 +6,21 @@ const router = express.Router();
 router.get('/', async (req, res) => {
   try {
     const db = getDb();
-    const gifts = await db.collection('gifts').find().toArray();
-    res.json(gifts);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch gifts' });
-  }
-});
 
-router.get('/:id', async (req, res) => {
-  try {
-    const db = getDb();
+    const filter = {};
 
-    const gift = await db.collection('gifts').findOne({
-      _id: new ObjectId(req.params.id)
-    });
-
-    if (!gift) {
-      return res.status(404).json({ error: 'Gift not found' });
+    if (req.query.category) {
+      filter.category = req.query.category;
     }
 
-    res.json(gift);
+    const results = await db.collection('gifts')
+      .find(filter)
+      .toArray();
+
+    res.json(results);
+
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch gift' });
+    res.status(500).json({ error: 'Search failed' });
   }
 });
 
