@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: giftlink-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: DB_NAME
+        value: giftlink
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 10000

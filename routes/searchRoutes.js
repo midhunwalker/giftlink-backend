@@ -3,25 +3,25 @@ const { getDb } = require('../models/db');
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-  try {
-    const db = getDb();
+// Async error wrapper
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
 
-    const filter = {};
+router.get('/', asyncHandler(async (req, res) => {
+  const db = getDb();
 
-    if (req.query.category) {
-      filter.category = req.query.category;
-    }
+  const filter = {};
 
-    const results = await db.collection('gifts')
-      .find(filter)
-      .toArray();
-
-    res.json(results);
-
-  } catch (error) {
-    res.status(500).json({ error: 'Search failed' });
+  if (req.query.category) {
+    filter.category = req.query.category;
   }
-});
+
+  const results = await db.collection('gifts')
+    .find(filter)
+    .toArray();
+
+  res.json(results);
+}));
 
 module.exports = router;

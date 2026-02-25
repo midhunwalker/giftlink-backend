@@ -4,32 +4,34 @@ const { getDb } = require('../models/db');
 
 const router = express.Router();
 
-router.get('/', async (req, res) => {
-  try {
-    const db = getDb();
-    const gifts = await db.collection('gifts').find().toArray();
-    res.json(gifts);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch gifts' });
+// Async error wrapper
+const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};
+
+router.get('/', asyncHandler(async (req, res) => {
+  const db = getDb();
+  const gifts = await db.collection('gifts').find().toArray();
+  res.json(gifts);
+}));
+
+router.get('/:id', asyncHandler(async (req, res) => {
+  const db = getDb();
+  
+  // Validate ObjectId format
+  if (!ObjectId.isValid(req.params.id)) {
+    return res.status(400).json({ error: 'Invalid gift ID format' });
   }
-});
 
-router.get('/:id', async (req, res) => {
-  try {
-    const db = getDb();
+  const gift = await db.collection('gifts').findOne({
+    _id: new ObjectId(req.params.id)
+  });
 
-    const gift = await db.collection('gifts').findOne({
-      _id: new ObjectId(req.params.id)
-    });
-
-    if (!gift) {
-      return res.status(404).json({ error: 'Gift not found' });
-    }
-
-    res.json(gift);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch gift' });
+  if (!gift) {
+    return res.status(404).json({ error: 'Gift not found' });
   }
-});
+
+  res.json(gift);
+}));
 
 module.exports = router;
