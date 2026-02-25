@@ -87,59 +87,97 @@ app.use((err, req, res, next) => {
 });
 
 /**
- * Start Server - CRITICAL FIX
- * Bind to PORT immediately, connect to DB in background
+ * Start Server - Production-Ready Startup Sequence
+ * 1. Connect to MongoDB FIRST
+ * 2. Only start server AFTER successful DB connection
+ * 3. If DB fails, crash immediately (no broken state)
  */
 const PORT = process.env.PORT || 8080;
 
-// Start server FIRST (Render needs this for health checks)
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✓ Server listening on port ${PORT}`);
-  console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
-  
-  // Connect to MongoDB AFTER server is listening
-  connectToDatabase(process.env.MONGO_URI, process.env.DB_NAME)
-    .then(() => {
-      console.log('✓ MongoDB connected successfully');
-    })
-    .catch((error) => {
-      console.error('✗ MongoDB connection failed:', error.message);
-      console.error('✗ App will continue but database operations will fail');
-      // Don't exit - let app stay alive for debugging
+async function startServer() {
+  try {
+    // Step 1: Connect to MongoDB
+    console.log('Connecting to MongoDB...');
+    await connectToDatabase(process.env.MONGO_URI, process.env.DB_NAME);
+    console.log('✓ MongoDB connected successfully');
+    
+    // Step 2: Start server only after DB is ready
+    const server = app.listen(PORT, '0.0.0.0', () => {
+      console.log(`✓ Server listening on port ${PORT}`);
+      console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log('✓ Application ready to accept requests');
     });
-});
+    
+    // Setup graceful shutdown handlers
+    setupGracefulShutdown(server);
+    
+  } catch (error) {
+    console.error('✗ FATAL: Failed to start application');
+    console.error('✗ Error:', error.message);
+    console.error('✗ Server cannot run without database connection');
+    console.error('Stack:', error.stack);
+    
+    // Exit with error code - let the process manager restart
+    process.exit(1);
+  }
+}
+
+// Start the application
+startServer();
 
 /**
- * Graceful Shutdown
+ * Graceful Shutdown Handler
  */
-process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
-
-process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully');
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
-  });
-});
+function setupGracefulShutdown(server) {
+  const { closeDatabase } = require('./models/db');
+  
+  const shutdown = async (signal) => {
+    console.log(`${signal} received, shutting down gracefully...`);
+    
+    // Close server first (stop accepting new requests)
+    server.close(async () => {
+      console.log('✓ Server closed');
+      
+      // Close database connection
+      try {
+        await closeDatabase();
+        console.log('✓ Database connection closed');
+        process.exit(0);
+      } catch (error) {
+        console.error('✗ Error closing database:', error.message);
+        process.exit(1);
+      }
+    });
+    
+    // Force shutdown after 10 seconds
+    setTimeout(() => {
+      console.error('✗ Forced shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  };
+  
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
+}
 
 /**
- * Handle uncaught errors
+ * Handle uncaught errors - Production-Ready
  */
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  // Don't exit in production - log and continue
+  console.error('✗ FATAL: Unhandled Promise Rejection');
+  console.error('✗ Reason:', reason);
+  console.error('✗ Promise:', promise);
+  
+  // In production, crash on unhandled rejections
+  // Process manager (like Render) will restart the app
+  process.exit(1);
 });
 
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  // In production, we should exit after logging
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
-  }
+  console.error('✗ FATAL: Uncaught Exception');
+  console.error('✗ Error:', error.message);
+  console.error('✗ Stack:', error.stack);
+  
+  // Always exit on uncaught exceptions
+  process.exit(1);
 });
